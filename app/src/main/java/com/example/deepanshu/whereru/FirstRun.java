@@ -16,6 +16,8 @@ public class FirstRun extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_first_run);
         mobileNoTextBox=(EditText) findViewById(R.id.mobile);
+        if (savedInstanceState!=null)
+         mobileNo=savedInstanceState.getString("MOBILE");
         done=(Button) findViewById(R.id.done);
         done.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -28,4 +30,12 @@ public class FirstRun extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        mobileNo=mobileNoTextBox.getText().toString();
+        outState.putString("MOBILE",mobileNo);
+    }
+
 }
