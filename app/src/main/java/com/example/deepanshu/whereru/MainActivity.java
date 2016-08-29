@@ -22,18 +22,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private static final int requestCode = 0;
+
     private static final String TAG = MainActivity.class.getSimpleName();
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
     private static int UPDATE_INTERVAL = 100;
     private static int FATEST_INTERVAL = 5000;
     private static int DISPLACEMENT = 10;
-    private TextView userMobileNumberTextBox, latitudeTextView, longitudeTextView;
-    private double latitude, longitude;
     private android.location.Location mLastLocation;
     private GoogleApiClient mGoogleApiClient;
     private boolean mRequestLocationUpdates = false;
     private LocationRequest mLocationRequest;
 
+    private TextView userMobileNumberTextBox, latitudeTextView, longitudeTextView;
     private User user;
 
     @Override
@@ -57,9 +57,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             buildGoogleApiClient();
             createLocationRequest();
         }
-
-        latitudeTextView.setText("Latitude: " + String.valueOf(latitude));
-        longitudeTextView.setText("Longitude: " + String.valueOf(longitude));
+        displayLocation();
+        latitudeTextView.setText("Latitude: " + user.getLatitude());
+        longitudeTextView.setText("Longitude: " + user.getLongitude());
     }
 
     private void getMobileNo(){
@@ -71,40 +71,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             user.setMobNo(MobileNumberPreferences.getMobileNo(this));
             userMobileNumberTextBox.append(user.getMobNo());
         }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (mGoogleApiClient != null) {
-            mGoogleApiClient.connect();
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        checkPlayServices();
-        if (mGoogleApiClient.isConnected() && mRequestLocationUpdates) {
-            startLocationUpdates();
-        }
-    }
-
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        if (mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.disconnect();
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        //stopLocationUpdates();
     }
 
     private void displayLocation() {
@@ -120,11 +86,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (mLastLocation != null) {
-            latitude = mLastLocation.getLatitude();
-            longitude = mLastLocation.getLongitude();
+            Log.i("APP",""+mLastLocation.getLatitude()+" "+mLastLocation.getLongitude());
+            user.setLatitude(""+mLastLocation.getLatitude());
+            user.setLongitude(""+mLastLocation.getLongitude());
 
-            latitudeTextView.setText("Latitude: " + String.valueOf(latitude));
-            longitudeTextView.setText("Longitude: " + String.valueOf(longitude));
+            latitudeTextView.setText("Latitude: " + user.getLatitude());
+            longitudeTextView.setText("Longitude: " + user.getLongitude());
         } else {
             latitudeTextView.setText("Couldn't get the location. Make sure location is enabled on the device");
         }
@@ -179,6 +146,40 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.connect();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        checkPlayServices();
+        if (mGoogleApiClient.isConnected() && mRequestLocationUpdates) {
+            startLocationUpdates();
+        }
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        //stopLocationUpdates();
+    }
+
+    @Override
     public void onConnected(Bundle bundle) {
         displayLocation();
 
@@ -221,6 +222,5 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         super.onSaveInstanceState(outState);
         outState.putString("MOBILE", user.getMobNo());
     }
-
 
 }
