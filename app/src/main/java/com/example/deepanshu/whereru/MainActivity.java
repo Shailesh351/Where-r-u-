@@ -22,27 +22,21 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener{
+        GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private static final int requestCode = 0;
-    private TextView userMobileNumberTextBox, latitudeTextView, longitudeTextView;
-    private String mobileNumber;
-
-    private double latitude, longitude;
-
     private static final String TAG = MainActivity.class.getSimpleName();
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
-
-    private android.location.Location mLastLocation;
-    private GoogleApiClient mGoogleApiClient;
-
-    private boolean mRequestLocationUpdates = false;
-
-    private LocationRequest mLocationRequest;
-
     private static int UPDATE_INTERVAL = 100;
     private static int FATEST_INTERVAL = 5000;
     private static int DISPLACEMENT = 10;
+    private TextView userMobileNumberTextBox, latitudeTextView, longitudeTextView;
+    private String mobileNumber;
+    private double latitude, longitude;
+    private android.location.Location mLastLocation;
+    private GoogleApiClient mGoogleApiClient;
+    private boolean mRequestLocationUpdates = false;
+    private LocationRequest mLocationRequest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,8 +65,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             createLocationRequest();
         }
 
-        latitudeTextView.setText("Latitude: "+String.valueOf(latitude));
-        longitudeTextView.setText("Longitude: "+String.valueOf(longitude));
+        latitudeTextView.setText("Latitude: " + String.valueOf(latitude));
+        longitudeTextView.setText("Longitude: " + String.valueOf(longitude));
     }
 
     @Override
@@ -110,16 +104,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     private void displayLocation() {
-            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            if (mLastLocation != null) {
-                latitude = mLastLocation.getLatitude();
-                longitude = mLastLocation.getLongitude();
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        if (mLastLocation != null) {
+            latitude = mLastLocation.getLatitude();
+            longitude = mLastLocation.getLongitude();
 
-                latitudeTextView.setText("Latitude: "+String.valueOf(latitude));
-                longitudeTextView.setText("Longitude: "+String.valueOf(longitude));
-            } else {
-                latitudeTextView.setText("Couldn't get the location. Make sure location is enabled on the device");
-            }
+            latitudeTextView.setText("Latitude: " + String.valueOf(latitude));
+            longitudeTextView.setText("Longitude: " + String.valueOf(longitude));
+        } else {
+            latitudeTextView.setText("Couldn't get the location. Make sure location is enabled on the device");
+        }
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -153,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     protected void startLocationUpdates() {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 
     protected void stopLocationUpdates() {
@@ -164,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public void onConnected(Bundle bundle) {
         displayLocation();
 
-        if(mRequestLocationUpdates) {
+        if (mRequestLocationUpdates) {
             startLocationUpdates();
         }
     }
@@ -191,9 +185,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode==0){
-            mobileNumber=data.getStringExtra("MOBILE");
-            MobileNumberPreferences.setMobileNo(mobileNumber,this);
+        if (requestCode == 0) {
+            mobileNumber = data.getStringExtra("MOBILE");
+            MobileNumberPreferences.setMobileNo(mobileNumber, this);
             userMobileNumberTextBox.append(mobileNumber);
         }
     }
@@ -201,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString("MOBILE",mobileNumber);
+        outState.putString("MOBILE", mobileNumber);
     }
 
 
