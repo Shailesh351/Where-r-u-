@@ -3,14 +3,11 @@ package com.example.deepanshu.whereru;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.*;
 import android.location.Location;
-import android.support.annotation.NonNull;
+import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,12 +28,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private static int FATEST_INTERVAL = 5000;
     private static int DISPLACEMENT = 10;
     private TextView userMobileNumberTextBox, latitudeTextView, longitudeTextView;
-    private String mobileNumber;
     private double latitude, longitude;
     private android.location.Location mLastLocation;
     private GoogleApiClient mGoogleApiClient;
     private boolean mRequestLocationUpdates = false;
     private LocationRequest mLocationRequest;
+
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,18 +44,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         latitudeTextView = (TextView) findViewById(R.id.latitude_cordinates);
         longitudeTextView = (TextView) findViewById(R.id.longitude_cordinates);
 
+        user = new User(getApplicationContext());
+
         if (savedInstanceState == null) {
-            String mobileNo = MobileNumberPreferences.getMobileNo(this);
-            if (mobileNo == null) {
-                Intent intent = new Intent(this, FirstRun.class);
-                startActivityForResult(intent, requestCode);
-            } else {
-                mobileNumber = MobileNumberPreferences.getMobileNo(this);
-                userMobileNumberTextBox.append(mobileNo);
-            }
+            getMobileNo();
         } else {
-            mobileNumber = savedInstanceState.getString("MOBILE");
-            userMobileNumberTextBox.append(mobileNumber);
+            user.setMobNo(savedInstanceState.getString("MOBILE"));
+            userMobileNumberTextBox.append(user.getMobNo());
         }
 
         if (checkPlayServices()) {
@@ -67,6 +60,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         latitudeTextView.setText("Latitude: " + String.valueOf(latitude));
         longitudeTextView.setText("Longitude: " + String.valueOf(longitude));
+    }
+
+    private void getMobileNo(){
+        String mobileNo = MobileNumberPreferences.getMobileNo(this);
+        if (mobileNo == null) {
+            Intent intent = new Intent(this, FirstRun.class);
+            startActivityForResult(intent, requestCode);
+        } else {
+            user.setMobNo(MobileNumberPreferences.getMobileNo(this));
+            userMobileNumberTextBox.append(user.getMobNo());
+        }
     }
 
     @Override
@@ -104,6 +108,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     private void displayLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (mLastLocation != null) {
             latitude = mLastLocation.getLatitude();
@@ -147,6 +161,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     protected void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 
@@ -186,16 +210,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 0) {
-            mobileNumber = data.getStringExtra("MOBILE");
-            MobileNumberPreferences.setMobileNo(mobileNumber, this);
-            userMobileNumberTextBox.append(mobileNumber);
+            user.setMobNo(data.getStringExtra("MOBILE"));
+            MobileNumberPreferences.setMobileNo(user.getMobNo(), this);
+            userMobileNumberTextBox.append(user.getMobNo());
         }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString("MOBILE", mobileNumber);
+        outState.putString("MOBILE", user.getMobNo());
     }
 
 
