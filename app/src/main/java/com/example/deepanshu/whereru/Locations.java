@@ -1,13 +1,11 @@
 package com.example.deepanshu.whereru;
 
-import android.Manifest;
+import android.app.FragmentManager;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -35,6 +33,25 @@ public class Locations implements LocationListener {
         context = con;
     }
 
+    public  boolean isGpsEnabled(){
+        locationManager = (LocationManager) context
+                .getSystemService(Context.LOCATION_SERVICE);
+
+        // getting GPS status
+        gps_enabled = locationManager
+                .isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        // getting network status
+        network_enabled = locationManager
+                .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+        if (gps_enabled && network_enabled) {
+           return true;
+
+            //  network provider is enabled
+        }
+    return false;
+    }
     public Location getLocation() {
         try {
             locationManager = (LocationManager) context
@@ -49,6 +66,8 @@ public class Locations implements LocationListener {
                     .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
             if (!gps_enabled && !network_enabled) {
+
+                return null;
                 // no network provider is enabled
             } else {
                 //this.canGetLocation = true;
