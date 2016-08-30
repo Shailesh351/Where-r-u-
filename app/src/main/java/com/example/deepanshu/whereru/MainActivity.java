@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity{
                 FragmentManager manager = getFragmentManager();
                 PermissionForGPS permissionForGPS = new PermissionForGPS();
                 permissionForGPS.show(manager, "GPS_PERMISSION");
+
                 return true;
             }
              else {
@@ -125,6 +126,7 @@ public class MainActivity extends AppCompatActivity{
     @Override
     protected void onPause() {
         super.onPause();
+
     }
 
 }
