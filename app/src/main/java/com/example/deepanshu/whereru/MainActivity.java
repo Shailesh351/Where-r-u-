@@ -3,10 +3,13 @@ package com.example.deepanshu.whereru;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.icu.text.SimpleDateFormat;
+import android.icu.util.Calendar;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private boolean mRequestLocationUpdates = true;
     private LocationRequest mLocationRequest;
 
-    private TextView userMobileNumberTextBox, latitudeTextView, longitudeTextView;
+    private TextView userMobileNumberTextBox, latitudeTextView, longitudeTextView, lastLocationTimeTextView;
     private User user;
 
     @Override
@@ -45,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         userMobileNumberTextBox = (TextView) findViewById(R.id.user_mobile_no);
         latitudeTextView = (TextView) findViewById(R.id.latitude_cordinates);
         longitudeTextView = (TextView) findViewById(R.id.longitude_cordinates);
+        lastLocationTimeTextView = (TextView) findViewById(R.id.last_location_time);
 
         user = new User(getApplicationContext());
 
@@ -62,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         displayLocation();
         latitudeTextView.setText("Latitude: " + user.getLatitude());
         longitudeTextView.setText("Longitude: " + user.getLongitude());
+        lastLocationTimeTextView.setText("Last Location Time: " + user.getLastLocationUpdateTime());
     }
 
     private void getMobileNo(){
@@ -88,12 +93,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (mLastLocation != null) {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd MMM yyyy HH:mm:ss");
+
             Log.i("APP",""+mLastLocation.getLatitude()+" "+mLastLocation.getLongitude());
             user.setLatitude(""+mLastLocation.getLatitude());
             user.setLongitude(""+mLastLocation.getLongitude());
+            user.setLastLocationUpdateTime(sdf.format(java.util.Calendar.getInstance().getTime()));
 
             latitudeTextView.setText("Latitude: " + user.getLatitude());
             longitudeTextView.setText("Longitude: " + user.getLongitude());
+            lastLocationTimeTextView.setText("Last Location Time: " + user.getLastLocationUpdateTime());
         } else {
             latitudeTextView.setText("Couldn't get the location. Make sure location is enabled on the device");
         }
@@ -144,7 +153,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     protected void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        if(mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        }
     }
 
     @Override
