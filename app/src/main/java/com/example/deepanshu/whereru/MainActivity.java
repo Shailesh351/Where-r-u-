@@ -24,13 +24,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private static final int requestCode = 0;
 
     private static final String TAG = MainActivity.class.getSimpleName();
+
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
     private static int UPDATE_INTERVAL = 100;
     private static int FATEST_INTERVAL = 5000;
     private static int DISPLACEMENT = 10;
+
     private android.location.Location mLastLocation;
     private GoogleApiClient mGoogleApiClient;
-    private boolean mRequestLocationUpdates = false;
+    private boolean mRequestLocationUpdates = true;
     private LocationRequest mLocationRequest;
 
     private TextView userMobileNumberTextBox, latitudeTextView, longitudeTextView;
@@ -176,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     protected void onPause() {
         super.onPause();
-        //stopLocationUpdates();
+        stopLocationUpdates();
     }
 
     @Override
