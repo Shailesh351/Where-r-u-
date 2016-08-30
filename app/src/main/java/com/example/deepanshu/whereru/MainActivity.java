@@ -1,45 +1,18 @@
 package com.example.deepanshu.whereru;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.icu.text.SimpleDateFormat;
-import android.icu.util.Calendar;
 import android.location.Location;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.text.format.DateFormat;
-import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class MainActivity extends AppCompatActivity{
 
     private static final int requestCode = 0;
-
-    private static final String TAG = MainActivity.class.getSimpleName();
-
-    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
-    private static int UPDATE_INTERVAL = 100;
-    private static int FATEST_INTERVAL = 5000;
-    private static int DISPLACEMENT = 10;
-
-    private android.location.Location mLastLocation;
-    private GoogleApiClient mGoogleApiClient;
-    private boolean mRequestLocationUpdates = true;
-    private LocationRequest mLocationRequest;
-
     private TextView userMobileNumberTextBox, latitudeTextView, longitudeTextView, lastLocationTimeTextView;
     private User user;
+    private Locations locations;
+    private Location loc;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +24,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         lastLocationTimeTextView = (TextView) findViewById(R.id.last_location_time);
 
         user = new User(getApplicationContext());
+        locations = new Locations(getApplicationContext());
+
+        locationUpdate();
 
         if (savedInstanceState == null) {
             getMobileNo();
@@ -59,14 +35,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             userMobileNumberTextBox.append(user.getMobNo());
         }
 
-        if (checkPlayServices()) {
-            buildGoogleApiClient();
-            createLocationRequest();
-        }
-        displayLocation();
         latitudeTextView.setText("Latitude: " + user.getLatitude());
         longitudeTextView.setText("Longitude: " + user.getLongitude());
-        lastLocationTimeTextView.setText("Last Location Time: " + user.getLastLocationUpdateTime());
+        lastLocationTimeTextView.setText("Last Locations Time: " + user.getLastLocationUpdateTime());
+    }
+
+    private void locationUpdate(){
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd MMM yyyy HH:mm:ss");
+
+        loc = locations.getLocation();
+        user.setLatitude(loc.getLatitude());
+        user.setLongitude(loc.getLongitude());
+        user.setLastLocationUpdateTime(sdf.format(java.util.Calendar.getInstance().getTime()));
     }
 
     private void getMobileNo(){
@@ -78,146 +58,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             user.setMobNo(MobileNumberPreferences.getMobileNo(this));
             userMobileNumberTextBox.append(user.getMobNo());
         }
-    }
-
-    private void displayLocation() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if (mLastLocation != null) {
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd MMM yyyy HH:mm:ss");
-
-            Log.i("APP",""+mLastLocation.getLatitude()+" "+mLastLocation.getLongitude());
-            user.setLatitude(""+mLastLocation.getLatitude());
-            user.setLongitude(""+mLastLocation.getLongitude());
-            user.setLastLocationUpdateTime(sdf.format(java.util.Calendar.getInstance().getTime()));
-
-            latitudeTextView.setText("Latitude: " + user.getLatitude());
-            longitudeTextView.setText("Longitude: " + user.getLongitude());
-            lastLocationTimeTextView.setText("Last Location Time: " + user.getLastLocationUpdateTime());
-        } else {
-            latitudeTextView.setText("Couldn't get the location. Make sure location is enabled on the device");
-        }
-    }
-
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API).build();
-    }
-
-    protected void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(UPDATE_INTERVAL);
-        mLocationRequest.setFastestInterval(FATEST_INTERVAL);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
-    }
-
-    private boolean checkPlayServices() {
-        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-        if (resultCode != ConnectionResult.SUCCESS) {
-            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-                GooglePlayServicesUtil.getErrorDialog(resultCode, this, PLAY_SERVICES_RESOLUTION_REQUEST).show();
-            } else {
-                Toast.makeText(getApplicationContext(), "This device is not supported", Toast.LENGTH_LONG)
-                        .show();
-                finish();
-            }
-            return false;
-        }
-        return true;
-    }
-
-    protected void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-    }
-
-    protected void stopLocationUpdates() {
-        if(mGoogleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (mGoogleApiClient != null) {
-            mGoogleApiClient.connect();
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        checkPlayServices();
-        if (mGoogleApiClient.isConnected() && mRequestLocationUpdates) {
-            startLocationUpdates();
-        }
-    }
-
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        if (mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.disconnect();
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        stopLocationUpdates();
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        displayLocation();
-
-        if (mRequestLocationUpdates) {
-            startLocationUpdates();
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        mLastLocation = location;
-
-        Toast.makeText(getApplicationContext(), "Location changed!", Toast.LENGTH_SHORT).show();
-
-        displayLocation();
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.i(TAG, "Connection failed: " + connectionResult.getErrorCode());
     }
 
     @Override
@@ -234,6 +74,27 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("MOBILE", user.getMobNo());
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
 
 }

@@ -8,9 +8,9 @@ import android.content.Context;
 public class User {
 
     private String mobNo = null;
-    private String latitude = null;
-    private String longitude = null;
-    private String lastLocationUpdateTime = null;
+    private double latitude;
+    private double longitude;
+    private String lastLocationUpdateTime;
 
     private Context mContext;
 
@@ -26,19 +26,19 @@ public class User {
         this.mobNo = mobNo;
     }
 
-    public String getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(String latitude) {
+    public void setLatitude(double latitude) {
         this.latitude = latitude;
     }
 
-    public String getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(String longitude) {
+    public void setLongitude(double longitude) {
         this.longitude = longitude;
     }
 
