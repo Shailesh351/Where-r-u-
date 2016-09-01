@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity{
                 return true;
             }
              else {
-                loc = locations.getLocation();
+                loc=new Location(locations.getLocation());
                 user.setLatitude(loc.getLatitude());
                 user.setLongitude(loc.getLongitude());
                 user.setLastLocationUpdateTime(sdf.format(java.util.Calendar.getInstance().getTime()));

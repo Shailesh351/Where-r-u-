@@ -1,5 +1,6 @@
 package com.example.deepanshu.whereru;
 
+import android.app.Activity;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.location.Location;
@@ -8,6 +9,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * Created by Deepanshu on 30-Aug-16.
@@ -16,7 +18,7 @@ public class Locations implements LocationListener {
     protected LocationManager locationManager;
     protected LocationListener locationListener;
     protected Context context;
-    Location location;
+    Location location=new Location("Location");
     TextView txtLat;
     String lat;
     String provider;
@@ -92,7 +94,6 @@ public class Locations implements LocationListener {
                             location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                             if (location != null) {
                                 Log.d("activity", "RLOC: loc by GPS");
-
                                 latitude = location.getLatitude();
                                 longitude = location.getLongitude();
                             }
