@@ -32,3 +32,4 @@
 
 1. [Tanishka Khatri](https://github.com/Tanishka1997)
 2. [Shailesh Baldaniya](https://github.com/Shailesh351)
+3. [Karan Juneja](https://github.com/karanjuneja1106)
