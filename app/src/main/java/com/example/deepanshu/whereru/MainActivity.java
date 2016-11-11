@@ -1,12 +1,18 @@
 package com.example.deepanshu.whereru;
 
 import android.app.FragmentManager;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity{
 
@@ -15,7 +21,11 @@ public class MainActivity extends AppCompatActivity{
     private User user;
     private Locations locations;
     private Location loc;
+    private Handler handler;
+    private PermissionForGPS permissionForGPS;
+    ProgressDialog progressDoalog;
 
+    private int cylce=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,12 +34,24 @@ public class MainActivity extends AppCompatActivity{
         latitudeTextView = (TextView) findViewById(R.id.latitude_cordinates);
         longitudeTextView = (TextView) findViewById(R.id.longitude_cordinates);
         lastLocationTimeTextView = (TextView) findViewById(R.id.last_location_time);
-
+        handler=new Handler();
         user = new User(getApplicationContext());
-        locations = new Locations(getApplicationContext());
+        locations = new Locations(getApplicationContext(),handler);
 
         locationUpdate();
+        locations.setLocationListener(new Locations.locationChanging() {
+            @Override
+            public void locationChanged(Location loc) {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd MMM yyyy HH:mm:ss");
+                user.setLatitude(loc.getLatitude());
+                user.setLongitude(loc.getLongitude());
+                user.setLastLocationUpdateTime(sdf.format(java.util.Calendar.getInstance().getTime()));
 
+                latitudeTextView.setText("Latitude: " + loc.getLatitude());
+                longitudeTextView.setText("Longitude: " + loc.getLongitude());
+                lastLocationTimeTextView.setText("Last Locations Time: " + user.getLastLocationUpdateTime());
+            }
+        });
 
         if (savedInstanceState == null) {
             getMobileNo();
@@ -37,10 +59,11 @@ public class MainActivity extends AppCompatActivity{
             user.setMobNo(savedInstanceState.getString("MOBILE"));
             userMobileNumberTextBox.append(user.getMobNo());
         }
-
-        latitudeTextView.setText("Latitude: " + user.getLatitude());
-        longitudeTextView.setText("Longitude: " + user.getLongitude());
-        lastLocationTimeTextView.setText("Last Locations Time: " + user.getLastLocationUpdateTime());
+        if (loc!=null) {
+            latitudeTextView.setText("Latitude: " + user.getLatitude());
+            longitudeTextView.setText("Longitude: " + user.getLongitude());
+            lastLocationTimeTextView.setText("Last Locations Time: " + user.getLastLocationUpdateTime());
+        }
     }
 
     private boolean locationUpdate(){
@@ -51,19 +74,55 @@ public class MainActivity extends AppCompatActivity{
 
             if (!locations.isGpsEnabled()) {
                 FragmentManager manager = getFragmentManager();
-                PermissionForGPS permissionForGPS = new PermissionForGPS();
+                permissionForGPS = new PermissionForGPS();
                 permissionForGPS.show(manager, "GPS_PERMISSION");
+
+                cylce=1;
 
                 return true;
             }
              else {
-                loc=new Location(locations.getLocation());
-                user.setLatitude(loc.getLatitude());
-                user.setLongitude(loc.getLongitude());
-                user.setLastLocationUpdateTime(sdf.format(java.util.Calendar.getInstance().getTime()));
-                return  false;
+
+                progressDoalog = new ProgressDialog(MainActivity.this);
+
+                progressDoalog.setMessage("Loading Location....");
+                progressDoalog.setTitle("LOCATION");
+                progressDoalog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                progressDoalog.show();
+                int i=0;
+
+                     while(loc==null&&i<=15){
+                         try {
+                             Thread.sleep(1000);
+
+                             i++;
+                             loc = locations.getLocation();
+                         } catch (InterruptedException e) {
+                             e.printStackTrace();
+                         }
+
+
+                         if (i<=15) {
+
+                             progressDoalog.dismiss();
+                         }
+                     }
+                progressDoalog.dismiss();
+
+                if(loc!=null) {
+                    user.setLatitude(loc.getLatitude());
+                    user.setLongitude(loc.getLongitude());
+                    user.setLastLocationUpdateTime(sdf.format(java.util.Calendar.getInstance().getTime()));
+                }
+                else
+                {
+                    latitudeTextView.setText("Unable to get a location.Please try Later");
+                }
+                    return  false;
+
             }
     }
+
 
     private void getMobileNo(){
         String mobileNo = MobileNumberPreferences.getMobileNo(this);
@@ -100,16 +159,19 @@ public class MainActivity extends AppCompatActivity{
         super.onStart();
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
 
+
         locationUpdate();
-        latitudeTextView.setText("Latitude: " + user.getLatitude());
-        longitudeTextView.setText("Longitude: " + user.getLongitude());
-        lastLocationTimeTextView.setText("Last Locations Time: " + user.getLastLocationUpdateTime());
-
-
+        if(loc!=null) {
+            latitudeTextView.setText("Latitude: " + user.getLatitude());
+            longitudeTextView.setText("Longitude: " + user.getLongitude());
+            lastLocationTimeTextView.setText("Last Locations Time: " + user.getLastLocationUpdateTime());
+        }
+        permissionForGPS.dismiss();
     }
 
     @Override
@@ -128,5 +190,6 @@ public class MainActivity extends AppCompatActivity{
         super.onPause();
 
     }
+
 
 }

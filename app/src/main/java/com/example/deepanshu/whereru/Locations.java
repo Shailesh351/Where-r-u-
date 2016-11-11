@@ -7,6 +7,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,18 +25,21 @@ public class Locations implements LocationListener {
     String provider;
     User user ;
     protected double latitude, longitude;
-    protected boolean gps_enabled, network_enabled;
+    protected static boolean gps_enabled, network_enabled;
 
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
 
     // The minimum time between updates in milliseconds
     private static final long MIN_TIME_BW_UPDATES = 1000 * 60; // 1 minute
-
-    public Locations(Context con) {
+    private locationChanging locationChangingListener;
+    private Handler mainActivityHandler;
+    public Locations(Context con, Handler handler) {
         context = con;
+        mainActivityHandler=handler;
     }
 
-    public  boolean isGpsEnabled(){
+
+    public boolean isGpsEnabled(){
         locationManager = (LocationManager) context
                 .getSystemService(Context.LOCATION_SERVICE);
 
@@ -47,7 +51,7 @@ public class Locations implements LocationListener {
         network_enabled = locationManager
                 .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        if (gps_enabled && network_enabled) {
+        if (network_enabled&&gps_enabled) {
            return true;
 
             //  network provider is enabled
@@ -99,6 +103,8 @@ public class Locations implements LocationListener {
                             }
                         }
                     }
+
+
                 }
             }
 
@@ -109,12 +115,22 @@ public class Locations implements LocationListener {
 
         return location;
     }
-
-    @Override
-    public void onLocationChanged(Location loc) {
-            location.set(loc);
+    public interface locationChanging{
+        void locationChanged(Location loc);
     }
-
+    @Override
+    public void onLocationChanged(final Location loc) {
+        mainActivityHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                locationChangingListener.locationChanged(loc);
+            }
+        });
+        location.set(loc);
+    }
+    public void setLocationListener(locationChanging listener){
+        locationChangingListener = listener;    
+    }
     @Override
     public void onStatusChanged(String s, int i, Bundle bundle) {
         Log.i("Latitude","status");
