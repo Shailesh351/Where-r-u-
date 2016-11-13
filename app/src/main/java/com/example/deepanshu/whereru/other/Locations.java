@@ -1,7 +1,5 @@
-package com.example.deepanshu.whereru;
+package com.example.deepanshu.whereru.other;
 
-import android.app.Activity;
-import android.app.FragmentManager;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
@@ -10,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * Created by Deepanshu on 30-Aug-16.

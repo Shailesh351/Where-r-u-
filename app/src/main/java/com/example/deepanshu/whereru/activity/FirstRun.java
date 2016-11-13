@@ -1,4 +1,4 @@
-package com.example.deepanshu.whereru;
+package com.example.deepanshu.whereru.activity;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+
+import com.example.deepanshu.whereru.R;
 
 public class FirstRun extends AppCompatActivity {
     private EditText mobileNoTextBox;
@@ -17,6 +19,7 @@ public class FirstRun extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_first_run);
         mobileNoTextBox = (EditText) findViewById(R.id.mobile);
+
         if (savedInstanceState != null)
             mobileNo = savedInstanceState.getString("MOBILE");
         done = (Button) findViewById(R.id.done);

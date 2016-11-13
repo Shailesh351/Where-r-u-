@@ -1,4 +1,4 @@
-package com.example.deepanshu.whereru;
+package com.example.deepanshu.whereru.other;
 
 import android.content.Context;
 import android.preference.PreferenceManager;
