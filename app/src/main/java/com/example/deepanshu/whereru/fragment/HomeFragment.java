@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,11 +22,21 @@ import com.example.deepanshu.whereru.other.Locations;
 import com.example.deepanshu.whereru.other.MobileNumberPreferences;
 import com.example.deepanshu.whereru.other.PermissionForGPS;
 import com.example.deepanshu.whereru.other.User;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.plus.model.people.Person;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private static final int requestCode = 0;
     ProgressDialog progressDoalog;
+    SupportMapFragment mapFragment;
+    LatLng location;
     private TextView userMobileNumberTextBox, latitudeTextView, longitudeTextView, lastLocationTimeTextView;
     private User user;
     private Locations locations;
@@ -33,12 +44,24 @@ public class HomeFragment extends Fragment {
     private Handler handler;
     private PermissionForGPS permissionForGPS;
     private int cylce = 0;
+    private GoogleMap mMap;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_home, container, false);
+
+        View view = inflater.inflate(R.layout.fragment_home, container, false);
+
+        mapFragment = (SupportMapFragment) this.getChildFragmentManager().findFragmentById(R.id.map);
+        if (getActivity() == null)
+            Toast.makeText(getActivity(), "Nulll activity", Toast.LENGTH_SHORT).show();
+        if (mapFragment == null)
+            Toast.makeText(getActivity(), "Nulll", Toast.LENGTH_SHORT).show();
+        /*else
+            mapFragment.getMapAsync(this);*/
+
+        return view;
     }
 
     @Override
@@ -53,7 +76,9 @@ public class HomeFragment extends Fragment {
         user = new User(getActivity().getApplicationContext());
         locations = new Locations(getActivity().getApplicationContext(), handler);
 
+
         locationUpdate();
+
         locations.setLocationListener(new Locations.locationChanging() {
             @Override
             public void locationChanged(Location loc) {
@@ -65,8 +90,14 @@ public class HomeFragment extends Fragment {
                 latitudeTextView.setText("Latitude: " + loc.getLatitude());
                 longitudeTextView.setText("Longitude: " + loc.getLongitude());
                 lastLocationTimeTextView.setText("Last Locations Time: " + user.getLastLocationUpdateTime());
+                location = new LatLng(user.getLatitude(), user.getLongitude());
+
+                /*mMap.addMarker(new MarkerOptions().position(location).title("Deepanshu is Here"));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location,14));*/
             }
         });
+
+        mapFragment.getMapAsync(this);
 
         if (savedInstanceState == null) {
             getMobileNo();
@@ -78,6 +109,11 @@ public class HomeFragment extends Fragment {
             latitudeTextView.setText("Latitude: " + user.getLatitude());
             longitudeTextView.setText("Longitude: " + user.getLongitude());
             lastLocationTimeTextView.setText("Last Locations Time: " + user.getLastLocationUpdateTime());
+            location = new LatLng(user.getLatitude(), user.getLongitude());
+
+           /*mMap.addMarker(new MarkerOptions().position(location).title("Deepanshu is Here"));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location,14));*/
+
         }
     }
 
@@ -132,7 +168,7 @@ public class HomeFragment extends Fragment {
         if (mobileNo != null) {
             user.setMobNo(mobileNo);
             userMobileNumberTextBox.setText(mobileNo);
-            Toast.makeText(getActivity(),mobileNo, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), mobileNo, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -159,5 +195,15 @@ public class HomeFragment extends Fragment {
         }
         if (permissionForGPS != null)
             permissionForGPS.dismiss();
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+
+        // Add a marker in Sydney and move the camera
+        //LatLng loc1 = new LatLng(21.160037, 72.7877983);
+        mMap.addMarker(new MarkerOptions().position(location).title("Deepanshu is Here"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 14));
     }
 }
