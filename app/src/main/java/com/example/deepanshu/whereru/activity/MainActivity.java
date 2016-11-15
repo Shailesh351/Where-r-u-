@@ -1,37 +1,59 @@
 package com.example.deepanshu.whereru.activity;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.deepanshu.whereru.R;
+import com.example.deepanshu.whereru.fragment.FriendsFragment;
 import com.example.deepanshu.whereru.fragment.HomeFragment;
-import com.example.deepanshu.whereru.other.MobileNumberPreferences;
-import com.example.deepanshu.whereru.other.User;
+import com.example.deepanshu.whereru.fragment.InviteFragment;
+import com.example.deepanshu.whereru.other.Utils;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int requestCode = 0;
+    public static final String PREF_NAME = "LOCA";
+    public static final String IS_LOGIN = "is_logged_in";
+    public static final String KEY_MOBILE_NUMBER = "user_mobile_number";
+    public static final String KEY_NAME = "user_name";
 
     // tags used to attach the fragments
     private static final String TAG_HOME = "home";
+    private static final String TAG_FRIENDS = "friends";
+    private static final String TAG_INVITE = "invite";
 
     // index to identify current nav menu item
     public static int navItemIndex = 0;
     public static String CURRENT_TAG = TAG_HOME;
 
-    private TextView userMobileNumberTextBox, latitudeTextView, longitudeTextView, lastLocationTimeTextView;
-    private User user;
+    int PRIVATE_MODE = 0;
+    private SharedPreferences mPref;
+    private SharedPreferences.Editor mEditor;
+
+    private DatabaseReference mDatabaseReference;
+    private FirebaseDatabase mFirebaseDatabase;
 
     private NavigationView navigationView;
     private TextView textName, textMobileNo;
@@ -51,7 +73,19 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        user = new User(getApplicationContext());
+        mPref = getApplicationContext().getSharedPreferences(PREF_NAME, PRIVATE_MODE);
+        mEditor = mPref.edit();
+
+        String isLoggedIn = mPref.getString(IS_LOGIN, null);
+
+        if (isLoggedIn == null) {
+            startActivity(new Intent(this, LogInActivity.class));
+            finish();
+        } else {
+            //mTextView.setText(mPref.getString(KEY_MOBILE_NUMBER, null));
+        }
+
+        mFirebaseDatabase = Utils.getDatabase(this);
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -79,28 +113,71 @@ public class MainActivity extends AppCompatActivity {
             navItemIndex = 0;
             CURRENT_TAG = TAG_HOME;
             loadHomeFragment();
-            getMobileNo();
+        }
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestLocationPermission();
         } else {
-            user.setMobNo(savedInstanceState.getString("MOBILE"));
+            Toast.makeText(this, "Granted", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void getMobileNo() {
-        String mobileNo = MobileNumberPreferences.getMobileNo(this);
-        if (mobileNo == null) {
-            Intent intent = new Intent(this, FirstRun.class);
-            startActivityForResult(intent, requestCode);
+    private void requestLocationPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+            Snackbar.make(drawer, "Location will give you your location",
+                    Snackbar.LENGTH_INDEFINITE)
+                    .setAction("OK", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            ActivityCompat
+                                    .requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                            1);
+                        }
+                    })
+                    .show();
         } else {
-            user.setMobNo(MobileNumberPreferences.getMobileNo(this));
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 0) {
-            user.setMobNo(data.getStringExtra("MOBILE"));
-            MobileNumberPreferences.setMobileNo(user.getMobNo(), this);
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == 1) {
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Granted", Toast.LENGTH_SHORT).show();
+                recreate();
+            } else {
+                Toast.makeText(this, "Denied", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = new MenuInflater(this);
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_log_out:
+                mEditor.clear();
+                mEditor.commit();
+                startActivity(new Intent(MainActivity.this, LogInActivity.class));
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -111,7 +188,8 @@ public class MainActivity extends AppCompatActivity {
      */
     private void loadNavHeader() {
         // name, mobile no
-        textMobileNo.setText(MobileNumberPreferences.getMobileNo(this));
+        textName.setText(mPref.getString(KEY_NAME, null));
+        textMobileNo.setText(mPref.getString(KEY_MOBILE_NUMBER, null));
     }
 
     /***
@@ -167,6 +245,14 @@ public class MainActivity extends AppCompatActivity {
                 // home
                 HomeFragment homeFragment = new HomeFragment();
                 return homeFragment;
+            case 1:
+                // photos
+                FriendsFragment friendsFragment = new FriendsFragment();
+                return friendsFragment;
+            case 2:
+                // movies fragment
+                InviteFragment inviteFragment = new InviteFragment();
+                return inviteFragment;
             default:
                 return new HomeFragment();
         }
@@ -196,10 +282,19 @@ public class MainActivity extends AppCompatActivity {
                         navItemIndex = 0;
                         CURRENT_TAG = TAG_HOME;
                         break;
+                    case R.id.nav_friends:
+                        navItemIndex = 1;
+                        CURRENT_TAG = TAG_FRIENDS;
+                        break;
+                    case R.id.nav_invite:
+                        navItemIndex = 2;
+                        CURRENT_TAG = TAG_INVITE;
+                        break;
                     case R.id.nav_log_out:
-                        MobileNumberPreferences.setMobileNo(null,MainActivity.this);
-                        startActivity(new Intent(MainActivity.this, FirstRun.class));
-                        drawer.closeDrawers();
+                        mEditor.clear();
+                        mEditor.commit();
+                        startActivity(new Intent(MainActivity.this, LogInActivity.class));
+                        finish();
                         return true;
                     default:
                         navItemIndex = 0;
@@ -240,5 +335,28 @@ public class MainActivity extends AppCompatActivity {
 
         //calling sync state is necessary or else your hamburger icon wont show up
         actionBarDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawers();
+            return;
+        }
+
+        // This code loads home fragment when back key is pressed
+        // when user is in other fragment than home
+        if (shouldLoadHomeFragOnBackPress) {
+            // checking if user is on other navigation menu
+            // rather than home
+            if (navItemIndex != 0) {
+                navItemIndex = 0;
+                CURRENT_TAG = TAG_HOME;
+                loadHomeFragment();
+                return;
+            }
+        }
+
+        super.onBackPressed();
     }
 }
